@@ -9,6 +9,34 @@ import { copyFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-mkdirSync(outDir, { recursive: true });
-copyFileSync(fileURLToPath(new URL("./entry.png", import.meta.url)), join(outDir, "entry.png"));
+const OUTPUT_FILE_NAME = "entry.png";
+const OUTPUT_DIR_ENV = "MAKEFUN_OUTPUT_DIR";
+const DEFAULT_OUTPUT_DIR = "/output";
+
+function resolveOutputDir(): string {
+  return process.env[OUTPUT_DIR_ENV] ?? DEFAULT_OUTPUT_DIR;
+}
+
+function bundledImagePath(): string {
+  return fileURLToPath(new URL("./entry.png", import.meta.url));
+}
+
+function destinationPath(outDir: string): string {
+  return join(outDir, OUTPUT_FILE_NAME);
+}
+
+function placeEntryImage(outDir: string): void {
+  copyFileSync(bundledImagePath(), destinationPath(outDir));
+}
+
+function ensureOutputDir(outDir: string): void {
+  mkdirSync(outDir, { recursive: true });
+}
+
+function main(): void {
+  const outDir = resolveOutputDir();
+  ensureOutputDir(outDir);
+  placeEntryImage(outDir);
+}
+
+main();
